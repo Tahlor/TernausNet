@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 
 #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-device = "cpu"
+#device = "cpu"
 
 def get_model():
     model = unet11(pretrained='carvana', device=device)
@@ -109,15 +109,17 @@ def create_mask_from_image(image_path ='lexus.jpg', output_folder="./output"):
     parent, image_name = os.path.split(image_path)
     img, pads = load_image(image_path, pad=True)
 
-    # with torch.no_grad():
-    #     input_img = torch.unsqueeze(img_transform(img).to(device), dim=0)
-    #
-    # with torch.no_grad():
-    #     mask = F.sigmoid(model(input_img))
-    #
-    # mask_array = mask.data[0].cpu().numpy()[0]
-    mask_array = (img * 0)[:,:,0]
-    mask_array[300:600]=1
+    if True:
+        with torch.no_grad():
+            input_img = torch.unsqueeze(img_transform(img).to(device), dim=0)
+
+        with torch.no_grad():
+            mask = F.sigmoid(model(input_img))
+
+        mask_array = mask.data[0].cpu().numpy()[0]
+    else:
+        mask_array = (img * 0)[:,:,0]
+        mask_array[300:600]=1
 
     mask_array = crop_image(mask_array, pads)
     output_image = crop_to_mask(crop_image(img, pads),  (mask_array > 0.5).astype(np.uint8)).astype(np.uint8)
@@ -128,12 +130,12 @@ def create_mask_from_image(image_path ='lexus.jpg', output_folder="./output"):
 
     # Save
     output_path = os.path.join(output_folder, image_name)
-    print(output_path)
+    #print(output_path)
     imsave(output_path, output_image)
 
 if __name__ == "__main__":
-    #input_path = r"../data/carvana/test"
-    input_path = "."
+    input_path = r"../data/carvana/test"
+    #input_path = "."
     output_path = r"../carvana/masked_images"
     output = utils.mkdir(output_path)
 
