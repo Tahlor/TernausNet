@@ -88,7 +88,7 @@ class UNet11(nn.Module):
         return self.final(dec1)
 
 
-def unet11(pretrained=False, **kwargs):
+def unet11(pretrained=False, device=None, **kwargs):
     """
     pretrained:
             False - no pre-trained network is used
@@ -97,9 +97,11 @@ def unet11(pretrained=False, **kwargs):
                 Kaggle: Carvana dataset https://www.kaggle.com/c/carvana-image-masking-challenge
     """
     model = UNet11(pretrained=pretrained, **kwargs)
-
     if pretrained == 'carvana':
-        state = torch.load('TernausNet.pt')
+        if device=='cpu':
+            state = torch.load('TernausNet.pt', map_location=lambda storage, loc: storage)
+        else:
+            state = torch.load('TernausNet.pt')
         model.load_state_dict(state['model'])
     return model
 
