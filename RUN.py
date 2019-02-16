@@ -142,7 +142,7 @@ if __name__ == "__main__":
     #for dir,sub,f in os.walk("../data/carvana/test"):
     for i,f in enumerate(os.listdir(input_path)):
         if i % 100 == 0:
-            print(i)
+            print("Progress: {}".format(i))
         if f[-4:]==".jpg":
             path = os.path.join(input_path, f)
             create_mask_from_image(path,output_path)

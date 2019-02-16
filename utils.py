@@ -3,6 +3,6 @@ import os
 
 def mkdir(path):
     try:
-        os.mkdir(path)
+        os.makedirs(path)
     except:
         pass
