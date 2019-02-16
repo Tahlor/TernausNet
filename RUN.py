@@ -10,10 +10,11 @@ from pathlib import Path
 from torchvision.transforms import ToTensor, Normalize, Compose
 import matplotlib.pyplot as plt
 import time
-TEST=True
+TEST=False
 
 #print(torch.cuda.is_available())
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+#device = torch.device("cpu")
 
 def get_model():
     model = unet11(pretrained='carvana', device=device)
@@ -144,13 +145,17 @@ def create_mask_from_image(image_path ='lexus.jpg', output_path="./lexus_crop.jp
 
 if __name__ == "__main__":
     input_folder = r"../data/carvana/test" if not TEST else "."
-    output_folder = r"../data/carvana/masked_images"
+    output_folder = r"../data/carvana/masked_images2"
     output = utils.mkdir(output_folder)
-
+    run_time = 0
+    interval = 100
+    i = 0
     #for dir,sub,f in os.walk("../data/carvana/test"):
-    for i,f in enumerate(os.listdir(input_folder)):
-        if i % 100 == 0:
+    for f in os.listdir(input_folder):
+        if i % interval == 0 and i > 0:
             print("Progress: {}".format(i))
+            print("Speed: {}".format(run_time/interval))
+            run_time = 0
         if f[-4:]==".jpg":
 
             # Prep paths
@@ -158,9 +163,10 @@ if __name__ == "__main__":
             output_path = os.path.join(output_folder, f).replace(".jpg",".png")
 
             if not os.path.exists(output_path) or TEST:
+                i += 1
                 tic = time.clock()
                 create_mask_from_image(path,output_path)
                 toc = time.clock()
-                print("Time: {}, Device: {}".format(tic-toc), device)
+                print("Time: {}, Device: {}".format(toc-tic, device))
+                run_time += toc-tic
 
-        Stop
