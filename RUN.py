@@ -105,8 +105,8 @@ img_transform = Compose([
     Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-def create_mask_from_image(image_path ='lexus.jpg', output_folder="./output"):
-    parent, image_name = os.path.split(image_path)
+def create_mask_from_image(image_path ='lexus.jpg', output_path="./lexus_crop.jpg"):
+    #parent, image_name = os.path.split(image_path)
     img, pads = load_image(image_path, pad=True)
 
     if True:
@@ -129,20 +129,25 @@ def create_mask_from_image(image_path ='lexus.jpg', output_folder="./output"):
     #imshow(mask_overlay(crop_image(img, pads), (mask_array > 0.5).astype(np.uint8)))
 
     # Save
-    output_path = os.path.join(output_folder, image_name)
+    #output_path = os.path.join(output_folder, image_name)
     #print(output_path)
     imsave(output_path, output_image)
 
 if __name__ == "__main__":
-    input_path = r"../data/carvana/test"
+    input_folder = r"../data/carvana/test"
     #input_path = "."
-    output_path = r"../carvana/masked_images"
-    output = utils.mkdir(output_path)
+    output_folder = r"../carvana/masked_images"
+    output = utils.mkdir(output_folder)
 
     #for dir,sub,f in os.walk("../data/carvana/test"):
-    for i,f in enumerate(os.listdir(input_path)):
+    for i,f in enumerate(os.listdir(input_folder)):
         if i % 100 == 0:
             print("Progress: {}".format(i))
         if f[-4:]==".jpg":
-            path = os.path.join(input_path, f)
-            create_mask_from_image(path,output_path)
+
+            # Prep paths
+            path = os.path.join(input_folder, f)
+            output_path = os.path.join(output_folder, f)
+
+            if not os.path.exists(output_path):
+                create_mask_from_image(path,output_path)
