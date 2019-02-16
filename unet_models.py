@@ -97,7 +97,7 @@ def unet11(pretrained=False, device=None, **kwargs):
     """
     model = UNet11(pretrained=pretrained, **kwargs)
     if pretrained == 'carvana':
-        if device=='cpu':
+        if device == torch.device("cpu"):
             state = torch.load('TernausNet.pt', map_location=lambda storage, loc: storage)
         else:
             state = torch.load('TernausNet.pt')

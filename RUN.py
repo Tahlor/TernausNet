@@ -7,13 +7,13 @@ import utils
 import os
 from unet_models import unet11
 from pathlib import Path
-from torch.nn import functional as F
 from torchvision.transforms import ToTensor, Normalize, Compose
 import matplotlib.pyplot as plt
+import time
+TEST=True
 
-
+#print(torch.cuda.is_available())
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-#device = "cpu"
 
 def get_model():
     model = unet11(pretrained='carvana', device=device)
@@ -32,7 +32,7 @@ def mask_overlay(image, mask, color=(0, 255, 0)):
     img[ind] = weighted_sum[ind]    
     return img
 
-def crop_to_mask(image, mask, color=(50,50,50)):
+def crop_to_mask1(image, mask, color=(50,50,50)):
     """
     Return image with background
     """
@@ -42,11 +42,20 @@ def crop_to_mask(image, mask, color=(50,50,50)):
 
     #weighted_sum = cv2.addWeighted(mask, 0.5, image, 0.5, 0.)
     weighted_sum = cv2.multiply(image,mask) + inverted_mask * np.array(color)
+    img_BGRA = cv2.merge((*cv2.split(weighted_sum.astype(np.uint8)), mask[:,:,0]))
 
     # img = image.copy()
     # ind = mask[:, :, 1] > 0
     # img[ind] = weighted_sum[ind]
-    return weighted_sum
+    return img_BGRA
+
+def crop_to_mask(image, mask, color=(50,50,50)):
+    """
+    Return image with background
+    """
+    img_BGRA = cv2.merge((*cv2.split(image.astype(np.uint8)), mask*255))
+    return img_BGRA
+
 
 def load_image(path, pad=True):
     """
@@ -109,12 +118,12 @@ def create_mask_from_image(image_path ='lexus.jpg', output_path="./lexus_crop.jp
     #parent, image_name = os.path.split(image_path)
     img, pads = load_image(image_path, pad=True)
 
-    if True:
+    if not TEST:
         with torch.no_grad():
             input_img = torch.unsqueeze(img_transform(img).to(device), dim=0)
 
         with torch.no_grad():
-            mask = F.sigmoid(model(input_img))
+            mask = torch.sigmoid(model(input_img))
 
         mask_array = mask.data[0].cpu().numpy()[0]
     else:
@@ -134,9 +143,8 @@ def create_mask_from_image(image_path ='lexus.jpg', output_path="./lexus_crop.jp
     imsave(output_path, output_image)
 
 if __name__ == "__main__":
-    input_folder = r"../data/carvana/test"
-    #input_path = "."
-    output_folder = r"../carvana/masked_images"
+    input_folder = r"../data/carvana/test" if not TEST else "."
+    output_folder = r"../data/carvana/masked_images"
     output = utils.mkdir(output_folder)
 
     #for dir,sub,f in os.walk("../data/carvana/test"):
@@ -147,7 +155,12 @@ if __name__ == "__main__":
 
             # Prep paths
             path = os.path.join(input_folder, f)
-            output_path = os.path.join(output_folder, f)
+            output_path = os.path.join(output_folder, f).replace(".jpg",".png")
 
-            if not os.path.exists(output_path):
+            if not os.path.exists(output_path) or TEST:
+                tic = time.clock()
                 create_mask_from_image(path,output_path)
+                toc = time.clock()
+                print("Time: {}, Device: {}".format(tic-toc), device)
+
+        Stop
